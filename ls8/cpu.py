@@ -34,25 +34,19 @@ class CPU:
 
         if len(sys.argv) > 1:
 
-            try:
-                address = 0
-                with open(sys.argv[1]) as f:
-                    for line in f:
-                        comment_split = line.split("#")
-                        n = comment_split[0].strip()
+            address = 0
+            with open(sys.argv[1]) as f:
+                for line in f:
+                    comment_split = line.split("#")
+                    n = comment_split[0].strip()
 
-                        if n == '':
-                            continue
+                    if n == '':
+                        continue
 
-                        val = int(n, 2)
-                        # store val in memory
-                        self.ram[address] = val
+                    val = int(n, 2)
+                    self.ram[address] = val
 
-                        address += 1
-
-            except FileNotFoundError:
-                print(f"{sys.argv[0]}: filename not found")
-                sys.exit(2)
+                    address += 1
 
         else:
             print(f"{sys.argv[0]}: filename not found")
@@ -89,10 +83,10 @@ class CPU:
         print()
 
     def ram_read(self, address):
-        return self.ram[address]
+        return self.reg[address]
 
     def ram_write(self, address, value):
-        self.ram[address] = value
+        self.reg[address] = value
 
     def run(self):
         """Run the CPU."""
@@ -115,7 +109,7 @@ class CPU:
 
             # MUL
             if command == 0b10100010:
-                self.ram_write(self.ram[self.pc+1], (self.ram[self.ram[self.pc+1]] * self.ram[self.ram[self.pc+2]]))
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]] * self.reg[self.ram[self.pc+2]]))
                 self.pc += 2
 
             # HLT
