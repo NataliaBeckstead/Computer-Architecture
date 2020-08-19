@@ -10,6 +10,7 @@ class CPU:
         self.reg = [0]*8
         self.ram = [0]*256
         self.pc = 0
+        self.sp = 244
 
     def load(self):
         """Load a program into memory."""
@@ -100,25 +101,39 @@ class CPU:
             if command == 0b10000010:
                 self.ram_write(self.ram[self.pc+1], self.ram[self.pc+2])
                 self.pc += 2
+                # print("LDI")
 
             # PRN
             if command == 0b01000111:
                 # print(bin(self.ram_read(self.ram[self.pc+1])))
                 print(self.ram_read(self.ram[self.pc+1]))
                 self.pc += 1
+                # print("PRN")
 
             # MUL
             if command == 0b10100010:
                 self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]] * self.reg[self.ram[self.pc+2]]))
                 self.pc += 2
+                # print("MUL")
+
+            # PUSH
+            if command == 0b01000101:
+                self.sp -= 1
+                self.ram[self.sp] = self.reg[self.ram[self.pc+1]]
+                self.pc += 1
+                # print("PUSH")
+
+            # POP
+            if command == 0b01000110:
+                self.reg[self.ram[self.pc+1]] = self.ram[self.sp]
+                self.sp += 1
+                self.pc += 1
+                # print("POP")
 
             # HLT
             if command == 0b00000001:
+                # print("HLT")
                 running = False
 
             self.pc += 1
 
-# test = CPU()
-# test.__init__()
-# test.load()
-# test.run()
