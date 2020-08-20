@@ -10,7 +10,7 @@ class CPU:
         self.reg = [0]*8
         self.ram = [0]*256
         self.pc = 0
-        self.sp = 244
+        self.reg[7] = 244 #SP
 
     def load(self):
         """Load a program into memory."""
@@ -101,57 +101,57 @@ class CPU:
             if command == 0b10000010:
                 self.ram_write(self.ram[self.pc+1], self.ram[self.pc+2])
                 self.pc += 2
-                print("LDI")
+                # print("LDI")
 
             # PRN
             if command == 0b01000111:
                 # print(bin(self.ram_read(self.ram[self.pc+1])))
                 print(self.ram_read(self.ram[self.pc+1]))
                 self.pc += 1
-                print("PRN")
+                # print("PRN")
 
             # MUL
             if command == 0b10100010:
                 self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]] * self.reg[self.ram[self.pc+2]]))
                 self.pc += 2
-                print("MUL")
+                # print("MUL")
 
             # PUSH
             if command == 0b01000101:
-                self.sp -= 1
-                self.ram[self.sp] = self.reg[self.ram[self.pc+1]]
+                self.reg[7] -= 1
+                self.ram[self.reg[7]] = self.reg[self.ram[self.pc+1]]
                 self.pc += 1
-                print("PUSH")
+                # print("PUSH")
 
             # POP
             if command == 0b01000110:
-                self.reg[self.ram[self.pc+1]] = self.ram[self.sp]
-                self.sp += 1
+                self.reg[self.ram[self.pc+1]] = self.ram[self.reg[7]]
+                self.reg[7] += 1
                 self.pc += 1
-                print("POP")
+                # print("POP")
 
             # CALL
             if command == 0b01010000:
-                self.sp -= 1
-                self.ram[self.sp] = self.pc + 2
+                self.reg[7] -= 1
+                self.ram[self.reg[7]] = self.pc + 2
                 self.pc = self.reg[self.ram[self.pc + 1]] - 1
-                print("CALL")
+                # print("CALL")
 
             # ADD
             if command == 0b10100000:
                 self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]] + self.reg[self.ram[self.pc+2]]))
                 self.pc += 2
-                print("ADD")
+                # print("ADD")
 
             # RET
             if command == 0b00010001:
-                self.pc = self.ram[self.sp] - 1
-                self.sp += 1
-                print("RET")
+                self.pc = self.ram[self.reg[7]] - 1
+                self.reg[7] += 1
+                # print("RET")
 
             # HLT
             if command == 0b00000001:
-                print("HLT")
+                # print("HLT")
                 running = False
 
             self.pc += 1
