@@ -11,6 +11,7 @@ class CPU:
         self.ram = [0]*256
         self.pc = 0
         self.reg[7] = 244 #SP
+        self.program_length = 0
 
     def load(self):
         """Load a program into memory."""
@@ -48,6 +49,8 @@ class CPU:
                     self.ram[address] = val
 
                     address += 1
+            
+            self.program_length = address
 
         else:
             print(f"{sys.argv[0]}: filename not found")
@@ -118,9 +121,13 @@ class CPU:
 
             # PUSH
             if command == 0b01000101:
-                self.reg[7] -= 1
-                self.ram[self.reg[7]] = self.reg[self.ram[self.pc+1]]
-                self.pc += 1
+                if self.reg[7] > self.program_length:
+                    self.reg[7] -= 1
+                    self.ram[self.reg[7]] = self.reg[self.ram[self.pc+1]]
+                    self.pc += 1
+                else:
+                    print("Stack is full")
+                    break
                 # print("PUSH")
 
             # POP
@@ -153,6 +160,11 @@ class CPU:
             if command == 0b00000001:
                 # print("HLT")
                 running = False
+
+            # JMP
+            if command == 0b01010100:
+                self.pc = self.reg[self.ram[self.pc+1]] - 1
+                # print("JMP")
 
             self.pc += 1
 
