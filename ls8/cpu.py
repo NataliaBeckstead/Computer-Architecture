@@ -101,38 +101,57 @@ class CPU:
             if command == 0b10000010:
                 self.ram_write(self.ram[self.pc+1], self.ram[self.pc+2])
                 self.pc += 2
-                # print("LDI")
+                print("LDI")
 
             # PRN
             if command == 0b01000111:
                 # print(bin(self.ram_read(self.ram[self.pc+1])))
                 print(self.ram_read(self.ram[self.pc+1]))
                 self.pc += 1
-                # print("PRN")
+                print("PRN")
 
             # MUL
             if command == 0b10100010:
                 self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]] * self.reg[self.ram[self.pc+2]]))
                 self.pc += 2
-                # print("MUL")
+                print("MUL")
 
             # PUSH
             if command == 0b01000101:
                 self.sp -= 1
                 self.ram[self.sp] = self.reg[self.ram[self.pc+1]]
                 self.pc += 1
-                # print("PUSH")
+                print("PUSH")
 
             # POP
             if command == 0b01000110:
                 self.reg[self.ram[self.pc+1]] = self.ram[self.sp]
                 self.sp += 1
                 self.pc += 1
-                # print("POP")
+                print("POP")
+
+            # CALL
+            if command == 0b01010000:
+                self.sp -= 1
+                self.ram[self.sp] = self.pc + 2
+                self.pc = self.reg[self.ram[self.pc + 1]] - 1
+                print("CALL")
+
+            # ADD
+            if command == 0b10100000:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]] + self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                print("ADD")
+
+            # RET
+            if command == 0b00010001:
+                self.pc = self.ram[self.sp] - 1
+                self.sp += 1
+                print("RET")
 
             # HLT
             if command == 0b00000001:
-                # print("HLT")
+                print("HLT")
                 running = False
 
             self.pc += 1
