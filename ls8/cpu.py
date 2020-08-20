@@ -12,6 +12,7 @@ class CPU:
         self.pc = 0
         self.reg[7] = 244 #SP
         self.program_length = 0
+        self.fl = 0b00000000
 
     def load(self):
         """Load a program into memory."""
@@ -132,6 +133,9 @@ class CPU:
 
             # POP
             if command == 0b01000110:
+                if self.reg[7] == 244:
+                    print("Stack is empty")
+                    continue
                 self.reg[self.ram[self.pc+1]] = self.ram[self.reg[7]]
                 self.reg[7] += 1
                 self.pc += 1
@@ -156,15 +160,47 @@ class CPU:
                 self.reg[7] += 1
                 # print("RET")
 
+            # JMP
+            if command == 0b01010100:
+                self.pc = self.reg[self.ram[self.pc+1]] - 1
+                # print("JMP")
+
+            # CMP
+            if command == 0b10100111:
+                # 00000LGE
+                if self.reg[self.ram[self.pc+1]] == self.reg[self.ram[self.pc+2]]:
+                    self.fl = 0b00000001
+                elif self.reg[self.ram[self.pc+1]] < self.reg[self.ram[self.pc+2]]:
+                    self.fl = 0b00000100
+                elif self.reg[self.ram[self.pc+1]] > self.reg[self.ram[self.pc+2]]:
+                    self.fl = 0b00000010
+                self.pc += 2
+                # print("CMP")
+
+            # JEQ
+            if command == 0b01010101:
+                # 00000LGE
+                if self.fl & 0b00000001: #bitwise masking
+                    self.pc = self.reg[self.ram[self.pc+1]] - 1
+                else:
+                    self.pc += 1
+                # print("JEQ")
+
+            # JNE
+            if command == 0b01010110:
+                # 00000LGE
+                if not self.fl & 0b00000001: #bitwise masking
+                    self.pc = self.reg[self.ram[self.pc+1]] - 1
+                else:
+                    self.pc += 1
+                # print("JNE")
+
             # HLT
             if command == 0b00000001:
                 # print("HLT")
                 running = False
 
-            # JMP
-            if command == 0b01010100:
-                self.pc = self.reg[self.ram[self.pc+1]] - 1
-                # print("JMP")
+            
 
             self.pc += 1
 
