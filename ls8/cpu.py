@@ -195,12 +195,34 @@ class CPU:
                     self.pc += 1
                 # print("JNE")
 
+            # INC
+            if command == 0b01100101:
+                self.reg[self.ram[self.pc+1]] += 1
+                self.pc += 1
+                # print("INC")
+
+            # DEC
+            if command == 0b01100110:
+                self.reg[self.ram[self.pc+1]] -= 1
+                self.pc += 1
+                # print("DEC")
+
+            # PRA
+            if command == 0b01001000:
+                print(chr(self.reg[self.ram[self.pc+1]]))
+                self.pc += 1
+                # print("PRA")
+            
+            # LD
+            if command == 0b10000011:
+                self.reg[self.ram[self.pc+1]] = self.ram[self.reg[self.ram[self.pc+2]]]
+                self.pc += 2
+                # print("LD")
+
             # HLT
             if command == 0b00000001:
                 # print("HLT")
                 running = False
-
-            
 
             self.pc += 1
 
