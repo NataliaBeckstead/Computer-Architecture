@@ -271,6 +271,12 @@ class CPU:
                 self.pc += 2
                 # print("MOD")
 
+            # ADDI
+            if command == 0b11111111:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]+self.ram[self.pc+2]))
+                self.pc += 2
+                # print("ADDI")
+
             # HLT
             if command == 0b00000001:
                 # print("HLT")
