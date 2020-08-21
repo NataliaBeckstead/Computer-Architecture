@@ -219,6 +219,58 @@ class CPU:
                 self.pc += 2
                 # print("LD")
 
+            # ST
+            if command == 0b10000011:
+                self.reg[self.ram[self.pc+2]] = self.ram[self.reg[self.ram[self.pc+1]]]
+                self.pc += 2
+                # print("ST")
+
+            ######### ALU operations ##########
+            # AND
+            if command == 0b10101000:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]&self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("AND")
+
+            # OR
+            if command == 0b10101010:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]|self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("OR")
+
+            # XOR
+            if command == 0b10101011:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]^self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("XOR")
+
+            # NOT
+            if command == 0b01101001:
+                self.ram_write(self.ram[self.pc+1], (~self.reg[self.ram[self.pc+1]]))
+                self.pc += 1
+                # print("NOT")
+
+            # SHL
+            if command == 0b10101100:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]<<self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("SHL")
+
+            # SHR
+            if command == 0b10101101:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]>>self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("SHR")
+
+            # MOD
+            if command == 0b10100100:
+                if self.reg[self.ram[self.pc+2]] == 0:
+                    print("Can't devide by 0")
+                    break
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]%self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("MOD")
+
             # HLT
             if command == 0b00000001:
                 # print("HLT")
