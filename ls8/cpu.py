@@ -220,7 +220,7 @@ class CPU:
                 # print("LD")
 
             # ST
-            if command == 0b10000011:
+            if command == 0b10000100:
                 self.reg[self.ram[self.pc+2]] = self.ram[self.reg[self.ram[self.pc+1]]]
                 self.pc += 2
                 # print("ST")
