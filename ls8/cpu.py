@@ -7,28 +7,55 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.reg = [0]*8
+        self.ram = [0]*256
+        self.pc = 0
+        self.reg[7] = 244 #SP
+        self.program_length = 0
+        self.fl = 0b00000000
 
     def load(self):
         """Load a program into memory."""
 
-        address = 0
+        # address = 0
 
-        # For now, we've just hardcoded a program:
+        # # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111, # PRN R0
+        #     0b00000000,
+        #     0b00000001, # HLT
+        # ]
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
+
+        if len(sys.argv) > 1:
+
+            address = 0
+            with open(sys.argv[1]) as f:
+                for line in f:
+                    comment_split = line.split("#")
+                    n = comment_split[0].strip()
+
+                    if n == '':
+                        continue
+
+                    val = int(n, 2)
+                    self.ram[address] = val
+
+                    address += 1
+            
+            self.program_length = address
+
+        else:
+            print(f"{sys.argv[0]}: filename not found")
+            sys.exit(2)
 
 
     def alu(self, op, reg_a, reg_b):
@@ -60,6 +87,200 @@ class CPU:
 
         print()
 
+    def ram_read(self, address):
+        return self.reg[address]
+
+    def ram_write(self, address, value):
+        self.reg[address] = value
+
     def run(self):
         """Run the CPU."""
-        pass
+
+        running = True
+
+        while running:
+            command = self.ram[self.pc]
+
+            # LDI
+            if command == 0b10000010:
+                self.ram_write(self.ram[self.pc+1], self.ram[self.pc+2])
+                self.pc += 2
+                # print("LDI")
+
+            # PRN
+            if command == 0b01000111:
+                # print(bin(self.ram_read(self.ram[self.pc+1])))
+                print(self.ram_read(self.ram[self.pc+1]))
+                self.pc += 1
+                # print("PRN")
+
+            # MUL
+            if command == 0b10100010:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]] * self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("MUL")
+
+            # PUSH
+            if command == 0b01000101:
+                if self.reg[7] > self.program_length:
+                    self.reg[7] -= 1
+                    self.ram[self.reg[7]] = self.reg[self.ram[self.pc+1]]
+                    self.pc += 1
+                else:
+                    print("Stack is full")
+                    break
+                # print("PUSH")
+
+            # POP
+            if command == 0b01000110:
+                if self.reg[7] == 244:
+                    print("Stack is empty")
+                    continue
+                self.reg[self.ram[self.pc+1]] = self.ram[self.reg[7]]
+                self.reg[7] += 1
+                self.pc += 1
+                # print("POP")
+
+            # CALL
+            if command == 0b01010000:
+                self.reg[7] -= 1
+                self.ram[self.reg[7]] = self.pc + 2
+                self.pc = self.reg[self.ram[self.pc + 1]] - 1
+                # print("CALL")
+
+            # ADD
+            if command == 0b10100000:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]] + self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("ADD")
+
+            # RET
+            if command == 0b00010001:
+                self.pc = self.ram[self.reg[7]] - 1
+                self.reg[7] += 1
+                # print("RET")
+
+            # JMP
+            if command == 0b01010100:
+                self.pc = self.reg[self.ram[self.pc+1]] - 1
+                # print("JMP")
+
+            # CMP
+            if command == 0b10100111:
+                # 00000LGE
+                if self.reg[self.ram[self.pc+1]] == self.reg[self.ram[self.pc+2]]:
+                    self.fl = 0b00000001
+                elif self.reg[self.ram[self.pc+1]] < self.reg[self.ram[self.pc+2]]:
+                    self.fl = 0b00000100
+                elif self.reg[self.ram[self.pc+1]] > self.reg[self.ram[self.pc+2]]:
+                    self.fl = 0b00000010
+                self.pc += 2
+                # print("CMP")
+
+            # JEQ
+            if command == 0b01010101:
+                # 00000LGE
+                if self.fl & 0b00000001: #bitwise masking
+                    self.pc = self.reg[self.ram[self.pc+1]] - 1
+                else:
+                    self.pc += 1
+                # print("JEQ")
+
+            # JNE
+            if command == 0b01010110:
+                # 00000LGE
+                if not self.fl & 0b00000001: #bitwise masking
+                    self.pc = self.reg[self.ram[self.pc+1]] - 1
+                else:
+                    self.pc += 1
+                # print("JNE")
+
+            # INC
+            if command == 0b01100101:
+                self.reg[self.ram[self.pc+1]] += 1
+                self.pc += 1
+                # print("INC")
+
+            # DEC
+            if command == 0b01100110:
+                self.reg[self.ram[self.pc+1]] -= 1
+                self.pc += 1
+                # print("DEC")
+
+            # PRA
+            if command == 0b01001000:
+                print(chr(self.reg[self.ram[self.pc+1]]))
+                self.pc += 1
+                # print("PRA")
+            
+            # LD
+            if command == 0b10000011:
+                self.reg[self.ram[self.pc+1]] = self.ram[self.reg[self.ram[self.pc+2]]]
+                self.pc += 2
+                # print("LD")
+
+            # ST
+            if command == 0b10000100:
+                self.reg[self.ram[self.pc+2]] = self.ram[self.reg[self.ram[self.pc+1]]]
+                self.pc += 2
+                # print("ST")
+
+            ######### ALU operations ##########
+            # AND
+            if command == 0b10101000:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]&self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("AND")
+
+            # OR
+            if command == 0b10101010:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]|self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("OR")
+
+            # XOR
+            if command == 0b10101011:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]^self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("XOR")
+
+            # NOT
+            if command == 0b01101001:
+                self.ram_write(self.ram[self.pc+1], (~self.reg[self.ram[self.pc+1]]))
+                self.pc += 1
+                # print("NOT")
+
+            # SHL
+            if command == 0b10101100:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]<<self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("SHL")
+
+            # SHR
+            if command == 0b10101101:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]>>self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("SHR")
+
+            # MOD
+            if command == 0b10100100:
+                if self.reg[self.ram[self.pc+2]] == 0:
+                    print("Can't devide by 0")
+                    break
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]%self.reg[self.ram[self.pc+2]]))
+                self.pc += 2
+                # print("MOD")
+
+            # ADDI
+            if command == 0b11111111:
+                self.ram_write(self.ram[self.pc+1], (self.reg[self.ram[self.pc+1]]+self.ram[self.pc+2]))
+                self.pc += 2
+                # print("ADDI")
+
+            # HLT
+            if command == 0b00000001:
+                # print("HLT")
+                running = False
+
+            self.pc += 1
+
